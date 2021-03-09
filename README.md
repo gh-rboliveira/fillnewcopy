@@ -60,15 +60,15 @@ For the below configuration:
 
 It will generate the following window:
 
-![Window]("/print_screens/Layout.JPG")
+![Window](https://github.com/gh-rboliveira/fillnewcopy/raw/main/print_screens/Layout.JPG)
 
 In our document we must have the placeholders "**<PERSON_NAME>**","**<CLIENT_NUMBER>**","**<AGE>**"
 
-![Before](https://ibb.co/RhsJvm9)
+![Before](https://github.com/gh-rboliveira/fillnewcopy/raw/main/print_screens/Before.JPG)
 
 After clicking **Build** a new file named Client_10001.docx will be created and filled with the data provided
 
-![After](https://ibb.co/YR0cn25)
+![After](https://github.com/gh-rboliveira/fillnewcopy/raw/main/print_screens/After.JPG)
 
 
 
