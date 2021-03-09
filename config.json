@@ -1,0 +1,30 @@
+{
+  "app_name": "Generate",
+  "template_file": "template.docx",
+  "filename": {
+    "type": "field",
+    "value": "client_number"
+  },
+  "file_prefix": "Client_",
+  "fields": {
+    "person_name": {
+      "label": "Name",
+      "type": "str",
+      "default": "",
+      "required": 1
+    },
+    "client_number": {
+      "label": "Client Number",
+      "type": "str",
+      "default": "",
+      "required": 1
+    },
+    "age": {
+      "label": "Age",
+      "type": "list",
+      "options": ["<18", "18-65", "65+"],
+      "default": "18-65",
+      "required": 1
+    }
+  }
+}
