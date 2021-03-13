@@ -25,6 +25,12 @@
       "options": ["<18", "18-65", "65+"],
       "default": "18-65",
       "required": 1
+    },
+    "description": {
+      "label": "Description",
+      "type": "textarea",
+      "default": "test",
+      "required": 1
     }
   }
 }

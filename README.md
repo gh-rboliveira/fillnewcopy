@@ -158,7 +158,7 @@ Where the **key** (example: "person_name") is considered the **field identifier*
 field  | Mandatory | What does it do
 ------------- | ------------- | -------------
 label | NO |To be used in the GUI. The default will be the key in uppercase
-type | NO | You can define 3 types of field **str** (String), **date** (Date), **list** (A list of values to be picked up). Undefined or non provided types will be interpreted as Strings (**str**)
+type | NO | You can define 4 types of field **str** (String), **date** (Date), **list** (A list of values to be picked up), and **textarea** (for long text). Undefined or non provided types will be interpreted as Strings (**str**)
 default| NO | A default value for the field
 required | NO | If a field should be required in the GUI
 options | NO | **(Only for list type)** an array of options for the list

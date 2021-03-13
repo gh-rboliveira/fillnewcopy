@@ -27,9 +27,6 @@ class FillNewCopy:
                 },
                 ...
         }
-
-        
-        
     """
 
     APP_NAME = "FillNewCopy"
@@ -108,7 +105,12 @@ class FillNewCopy:
                 errors = False
                 for (key, value) in values.items():
                     if key in fields:
-                        if fields.get(key).get("required") and value=="":
+                        
+                        # Clean strings not to accept spaces as input
+                        if type(value)==str:
+                            value = value.strip()
+                        
+                        if fields.get(key).get("required") and (value=="" or value==[]):
                             sg.Popup("Opps!", f"{fields.get(key).get('label')} cannot be empty!")
                             errors = True
                             break
@@ -165,14 +167,14 @@ class FillNewCopy:
             if "default" not in field:
                 field.update({"default": ""})
 
-            if field.get("type") == "str":
-                layout.append(self.build_string_field(field_name, field))
-            elif field.get("type") == "int":
+            if field.get("type") == "str" or field.get("type") == "int":
                 layout.append(self.build_string_field(field_name, field))
             elif field.get("type") == "date":
                 layout.append(self.build_date_field(field_name, field))
             elif field.get("type") == "list":
                 layout.append(self.build_list_field(field_name, field))
+            elif field.get("type") == "textarea":
+                layout.append(self.build_textarea_field(field_name, field))
             else: # If not identified, just treat it as a str
                 layout.append(self.build_string_field(field_name, field))
 
@@ -239,7 +241,15 @@ class FillNewCopy:
 
         return field_layout
         
-    
+    def build_textarea_field(self, field_name:str, field:dict):
+        field_layout = []
+
+        field_layout.append(sg.Text(self.build_label_text(field_name, field), size =(15, 1)))
+        field_layout.append(sg.Multiline(field.get("default"), size=(30, 5), key=field_name))
+
+        return field_layout
+
+
     def build_label_text(self, field_name:str, field:dict):
         """
             Returns the label text
