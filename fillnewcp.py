@@ -6,6 +6,7 @@ import sys
 from docx import Document
 from os import path
 
+
 class FillNewCopy:
     """
         A Class that based in a configuration file and a template file, will create a new Word document (docx).
@@ -32,7 +33,7 @@ class FillNewCopy:
     APP_NAME = "FillNewCopy"
     DEFAULT_DATE_FORMAT = "%d-%m-%Y"
 
-    def __init__(self, config_path:str="config.json"):
+    def __init__(self, config_path: str = "config.json"):
         """
             It will start the app by loading configuration
 
@@ -40,32 +41,32 @@ class FillNewCopy:
                 config_path (str, optional): Configuration file path. Defaults to "config.json".
         """
         # Change here if you want to relocate you config file
-        self.loadConfiguration(config_path)
-        self.app_name = self.config.get('app_name',self.APP_NAME)
+        self.config = {}
+        self.load_configuration(config_path)
+        self.app_name = self.config.get('app_name', self.APP_NAME)
 
-    def loadConfiguration(self, config_path:str):
+    def load_configuration(self, config_path: str):
         """
             Load configuration
             
             Parameters:
                 config_path (str): File location for config file
 
-            Returns:
-                int:Returning value
+            Returns:                int:Returning value
         """
         # Try to open configuration file
         try:
             with open(config_path) as json_file:
                 config_data = json.load(json_file)
                 self.config = config_data
-            
-            print(type(self.config))
+
             # Validate config data
-            if "app_name" not in self.config or self.config.get("app_name")=="":
-                self.config.update({"app_name": self.APP_NAME}) 
+            if "app_name" not in self.config or self.config.get("app_name") == "":
+                self.config.update({"app_name": self.APP_NAME})
 
             if "template_file" not in self.config:
-                sg.Popup("Opps!", "No template file provided in config file. Please make sure that 'template_file' exists in the configuration and provides a correct path.")
+                sg.Popup("Opps!", "No template file provided in config file. Please make sure that 'template_file'"
+                                  " exists in the configuration and provides a correct path.")
                 sys.exit()
 
             if not path.exists(self.config.get("template_file")):
@@ -74,29 +75,28 @@ class FillNewCopy:
 
             if "date_format" not in self.config:
                 self.config.update({"date_format": self.DEFAULT_DATE_FORMAT})
-            
+
             if "fields" not in self.config:
                 sg.Popup("Opps!", f"No fields configured in the config, please check documentation.")
                 sys.exit()
 
-        except FileNotFoundError as err:
+        except FileNotFoundError:
             sg.Popup("Opps!", "Config file not found.")
             sys.exit()
-        
-        except json.decoder.JSONDecodeError as jsonerr:
+
+        except json.decoder.JSONDecodeError:
             sg.Popup("Opps!", "Bad Json in config file!")
             sys.exit()
-
 
     def start(self):
         """
             Create and launch window
         """
-        windowLayout = self.buildGUI()
-        self.window = sg.Window(self.app_name, windowLayout)
+        window_layout = self.build_gui()
+        window = sg.Window(self.app_name, window_layout)
         fields = self.config.get("fields")
         while True:
-            event, values = self.window.read()
+            event, values = window.read()
             if event == sg.WIN_CLOSED or event == 'Cancel':  # if user closes window or clicks cancel
                 break
 
@@ -105,13 +105,12 @@ class FillNewCopy:
                 errors = False
                 for (key, value) in values.items():
                     if key in fields:
-                        
-                        # Clean strings not to accept spaces as input
-                        if type(value)==str:
-                            value = value.strip()
-                        
-                        if fields.get(key).get("required") and (value=="" or value==[]):
-                            sg.Popup("Opps!", f"{fields.get(key).get('label')} cannot be empty!")
+                        errmsg = ""
+                        if fields.get(key).get("type") == "str":
+                            errmsg = self.validate_text_field(fields.get(key), value)
+
+                        if errmsg != "":
+                            sg.Popup("Opps!", f"{errmsg}")
                             errors = True
                             break
 
@@ -122,25 +121,25 @@ class FillNewCopy:
                         filename = self.build_document(values)
                         sg.Popup("Congrats!", f"Your file ({filename}) was generated!")
                         break
-                    except:
+                    except Exception:
                         e = sys.exc_info()[0]
                         sg.Popup(f"Problem generating your file. (Error: {e})")
-                
 
-    def sanitize_values(self, values:dict):
+    @staticmethod
+    def sanitize_values(values: dict):
         """
             Due to the way lists works in PySimpleGUI,
             we need to make sure we parse them correctly 
             
             Parameters:
-                values (dict): Dictionary containong the values
+                values (dict): Dictionary containing the values
 
         """
-        for (key,value) in values.items():
-            if isinstance(value,list):
+        for (key, value) in values.items():
+            if isinstance(value, list):
                 values.update({key: value[0]})
 
-    def buildGUI(self):
+    def build_gui(self):
         """
             Build GUI based in fields loaded from
             the config
@@ -151,15 +150,12 @@ class FillNewCopy:
             Returns:
                 List of elements to be used in the layout
         """
-        layout = []
         # Build header
-        layout.append([sg.Text(f"Welcome to {self.app_name}")])
-        layout.append([sg.Text('')])
+        layout = [[sg.Text(f"Welcome to {self.app_name}")], [sg.Text('')]]
 
         # Build form
-        for (field_name,field) in (self.config.get("fields")).items():
+        for (field_name, field) in (self.config.get("fields")).items():
             # By default we will use str as type
-            print(field)
             if "type" not in field:
                 field.update({"type": "str"})
 
@@ -175,7 +171,7 @@ class FillNewCopy:
                 layout.append(self.build_list_field(field_name, field))
             elif field.get("type") == "textarea":
                 layout.append(self.build_textarea_field(field_name, field))
-            else: # If not identified, just treat it as a str
+            else:  # If not identified, just treat it as a str
                 layout.append(self.build_string_field(field_name, field))
 
         # Build footer
@@ -185,7 +181,7 @@ class FillNewCopy:
         layout.append([sg.Text('')])
         return layout
 
-    def build_string_field(self, field_name:str, field:dict):
+    def build_string_field(self, field_name: str, field: dict):
         """
             Build list with elements of a string field
             
@@ -197,14 +193,50 @@ class FillNewCopy:
                 list: List with the elements composing a text field
         """
 
-        field_layout = []
-
-        field_layout.append(sg.Text(self.build_label_text(field_name, field), size =(15, 1)))
-        field_layout.append(sg.InputText(field.get("default"), key=field_name))
+        field_layout = [sg.Text(self.build_label_text(field_name, field), size=(15, 1)),
+                        sg.InputText(field.get("default"), key=field_name)]
 
         return field_layout
 
-    def build_date_field(self, field_name:str, field:dict):
+    @staticmethod
+    def validate_text_field(field: dict, value: str):
+        """
+            Validates text fields
+
+        Args:
+            field (dict): The field configuration
+            value (str): input value
+
+        Returns:
+            str: empty string if no errors, otherwise error message
+        """
+        if field.get("required") and value.strip() == "":
+            return f"{field.get('label')} is required!"
+        return ""
+
+    @staticmethod
+    def validate_int_field(field: dict, value: str):
+        """
+            Validates text fields
+
+        Args:
+            field (dict): The field configuration
+            value (str): input value
+
+        Returns:
+            str: empty string if no errors, otherwise error message
+        """
+        if field.get("required") and value.strip() == "":
+            return f"{field.get('label')} is required!"
+
+        try:
+            temp = int(value)
+        except ValueError:
+            return f"{field.get('label')} should be a Number"
+
+        return ""
+
+    def build_date_field(self, field_name: str, field: dict):
         """
             Build list with elements of a date field
 
@@ -216,15 +248,14 @@ class FillNewCopy:
             list: List with the elements composing a date field
         """
         now = (datetime.datetime.now()).strftime(self.config.get("date_format"))
-        field_layout = []
-        field_layout.append(sg.Text(self.build_label_text(field_name, field), size =(15, 1)))
-        field_layout.append(sg.InputText(now, key=field_name, enable_events=False, visible=True))
-        field_layout.append(sg.CalendarButton('Calendar', target=field_name, pad=None,
-            key='CALENDAR', format=(self.config.get("date_format"))))
+        field_layout = [sg.Text(self.build_label_text(field_name, field), size=(15, 1)),
+                        sg.InputText(now, key=field_name, enable_events=False, visible=True),
+                        sg.CalendarButton('Calendar', target=field_name,
+                                          key='CALENDAR', format=(self.config.get("date_format")))]
 
         return field_layout
 
-    def build_list_field(self, field_name:str, field:dict):
+    def build_list_field(self, field_name: str, field: dict):
         """
             Build list with elements of a list field
 
@@ -235,22 +266,20 @@ class FillNewCopy:
         Returns:
             list: List with the elements composing a list field
         """
-        field_layout = []
-        field_layout.append(sg.Text(self.build_label_text(field_name, field), size =(15, 1)))
-        field_layout.append(sg.Listbox(field.get("options"),default_values=field.get("default"), size=(20, 4), enable_events=False, key=field_name))
-
-        return field_layout
-        
-    def build_textarea_field(self, field_name:str, field:dict):
-        field_layout = []
-
-        field_layout.append(sg.Text(self.build_label_text(field_name, field), size =(15, 1)))
-        field_layout.append(sg.Multiline(field.get("default"), size=(30, 5), key=field_name))
+        field_layout = [sg.Text(self.build_label_text(field_name, field), size=(15, 1)),
+                        sg.Listbox(field.get("options"), default_values=field.get("default"), size=(20, 4),
+                                   enable_events=False, key=field_name)]
 
         return field_layout
 
+    def build_textarea_field(self, field_name: str, field: dict):
+        field_layout = [sg.Text(self.build_label_text(field_name, field), size=(15, 1)),
+                        sg.Multiline(field.get("default"), size=(30, 5), key=field_name)]
 
-    def build_label_text(self, field_name:str, field:dict):
+        return field_layout
+
+    @staticmethod
+    def build_label_text(field_name: str, field: dict):
         """
             Returns the label text
 
@@ -259,9 +288,9 @@ class FillNewCopy:
             field (dict): The field configuration
 
         Returns:
-            str: formmated string to be used in the label
+            str: formatted string to be used in the label
         """
-        
+
         label = ""
         if "required" in field:
             label = " * " if field.get("required") else ""
@@ -274,8 +303,7 @@ class FillNewCopy:
 
         return label
 
-
-    def build_document(self,values:dict):
+    def build_document(self, values: dict):
         """
             Tries to parse the document and substitute
         place holders by the input values
@@ -360,17 +388,18 @@ class FillNewCopy:
 
         # Make sure we have a prefix populated
         if "file_prefix" not in self.config:
-            self.config.update({"file_prefix":""})
+            self.config.update({"file_prefix": ""})
 
         # Make sure we have a posfix populated
         if "file_posfix" not in self.config:
-            self.config.update({"file_posfix":""})
+            self.config.update({"file_posfix": ""})
 
         filename = self.config.get("file_prefix") + filename + self.config.get("file_posfix")
 
         doc.save(f"{filename}.docx")
 
         return f"{filename}.docx"
+
 
 rn = FillNewCopy()
 rn.start()
