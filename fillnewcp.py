@@ -48,7 +48,7 @@ class FillNewCopy:
     def load_configuration(self, config_path: str):
         """
             Load configuration
-            
+
             Parameters:
                 config_path (str): File location for config file
 
@@ -107,7 +107,20 @@ class FillNewCopy:
                     if key in fields:
                         errmsg = ""
                         if fields.get(key).get("type") == "str":
-                            errmsg = self.validate_text_field(fields.get(key), value)
+                            errmsg = self.validate_text_field(
+                                fields.get(key), value)
+                        if fields.get(key).get("type") == "int":
+                            errmsg = self.validate_int_field(
+                                fields.get(key), value)
+                        if fields.get(key).get("type") == "list":
+                            errmsg = self.validate_list_field(
+                                fields.get(key), value)
+                        if fields.get(key).get("type") == "date":
+                            errmsg = self.validate_date_field(
+                                fields.get(key), value)
+                        if fields.get(key).get("type") == "textarea":
+                            errmsg = self.validate_textarea_field(
+                                fields.get(key), value)
 
                         if errmsg != "":
                             sg.Popup("Opps!", f"{errmsg}")
@@ -119,7 +132,8 @@ class FillNewCopy:
                     self.sanitize_values(values)
                     try:
                         filename = self.build_document(values)
-                        sg.Popup("Congrats!", f"Your file ({filename}) was generated!")
+                        sg.Popup(
+                            "Congrats!", f"Your file ({filename}) was generated!")
                         break
                     except Exception:
                         e = sys.exc_info()[0]
@@ -129,8 +143,8 @@ class FillNewCopy:
     def sanitize_values(values: dict):
         """
             Due to the way lists works in PySimpleGUI,
-            we need to make sure we parse them correctly 
-            
+            we need to make sure we parse them correctly
+
             Parameters:
                 values (dict): Dictionary containing the values
 
@@ -146,7 +160,7 @@ class FillNewCopy:
 
             NOTE: At this moment int works equally to
             str. Hopefully to be improved in the future
-            
+
             Returns:
                 List of elements to be used in the layout
         """
@@ -184,7 +198,7 @@ class FillNewCopy:
     def build_string_field(self, field_name: str, field: dict):
         """
             Build list with elements of a string field
-            
+
             Parameters:
                 field_name (str): The field name
                 field (dict): The field configuration
@@ -217,7 +231,7 @@ class FillNewCopy:
     @staticmethod
     def validate_int_field(field: dict, value: str):
         """
-            Validates text fields
+            Validates int fields
 
         Args:
             field (dict): The field configuration
@@ -247,13 +261,37 @@ class FillNewCopy:
         Returns:
             list: List with the elements composing a date field
         """
-        now = (datetime.datetime.now()).strftime(self.config.get("date_format"))
+        now = (datetime.datetime.now()).strftime(
+            self.config.get("date_format"))
         field_layout = [sg.Text(self.build_label_text(field_name, field), size=(15, 1)),
-                        sg.InputText(now, key=field_name, enable_events=False, visible=True),
+                        sg.InputText(now, key=field_name,
+                                     enable_events=False, visible=True),
                         sg.CalendarButton('Calendar', target=field_name,
                                           key='CALENDAR', format=(self.config.get("date_format")))]
 
         return field_layout
+
+    def validate_date_field(self, field: dict, value: str):
+        """
+            Validates a date field
+
+        Args:
+            field (dict): The field configuration
+            value (str): input value
+
+        Returns:
+            str: empty string if no errors, otherwise error message
+        """
+        if field.get("required") and value.strip() == "":
+            return f"{field.get('label')} is required!"
+
+        try:
+            datetime.datetime.strptime(value, self.config.get("date_format"))
+        except ValueError:
+            return f"{field.get('label')} should be a date with the format provided in " \
+                   f"config {self.config.get('date_format')}"
+
+        return ""
 
     def build_list_field(self, field_name: str, field: dict):
         """
@@ -272,11 +310,47 @@ class FillNewCopy:
 
         return field_layout
 
+    @staticmethod
+    def validate_list_field(field: dict, value: list):
+        """
+            Validates a list field
+
+        Args:
+            field (dict): The field configuration
+            value (str): input value
+
+        Returns:
+            str: empty string if no errors, otherwise error message
+        """
+
+        if field.get("required") and len(value) == 0:
+            return f"{field.get('label')} is required!"
+
+        return ""
+
     def build_textarea_field(self, field_name: str, field: dict):
         field_layout = [sg.Text(self.build_label_text(field_name, field), size=(15, 1)),
                         sg.Multiline(field.get("default"), size=(30, 5), key=field_name)]
 
         return field_layout
+
+    @staticmethod
+    def validate_textarea_field(field: dict, value: str):
+        """
+            Validates a textarea field
+
+        Args:
+            field (dict): The field configuration
+            value (str): input value
+
+        Returns:
+            str: empty string if no errors, otherwise error message
+        """
+
+        if field.get("required") and value.strip() == "":
+            return f"{field.get('label')} is required!"
+
+        return ""
 
     @staticmethod
     def build_label_text(field_name: str, field: dict):

@@ -15,7 +15,13 @@
     },
     "client_number": {
       "label": "Client Number",
-      "type": "str",
+      "type": "int",
+      "default": "",
+      "required": 1
+    },
+    "member_since": {
+      "label": "Member since",
+      "type": "date",
       "default": "",
       "required": 1
     },
@@ -23,7 +29,7 @@
       "label": "Age",
       "type": "list",
       "options": ["<18", "18-65", "65+"],
-      "default": "18-65",
+      "default": "",
       "required": 1
     },
     "description": {
