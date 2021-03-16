@@ -475,5 +475,7 @@ class FillNewCopy:
         return f"{filename}.docx"
 
 
-rn = FillNewCopy()
-rn.start()
+if __name__ == "__main__":
+    rn = FillNewCopy()
+    rn.start()
+
